@@ -1,0 +1,118 @@
+---
+title: "bodyfat"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(shiny)
+library(shinyvalidate)
+bodyfat <- read.csv('bodyfat.csv')
+
+ui <- fluidPage(
+  titlePanel("Body fat prediction"),
+  
+  # textInput('df' ,'df name'),
+  numericInput("age", "age:", 10, min = 20, max = 90),
+  numericInput("weight", "weight", 10, min = min(bodyfat$WEIGHT), max = max(bodyfat$WEIGHT)),
+  numericInput("height", "height", 10, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
+  numericInput("neck", "neck", 10, min = min(bodyfat$NECK), max = max(bodyfat$NECK)),
+  numericInput("chest", "chest", 10, min = min(bodyfat$CHEST), max = max(bodyfat$CHEST)),
+  numericInput("abdomen", "abdomen", 10, min = min(bodyfat$ABDOMEN), max = max(bodyfat$ABDOMEN)),
+  numericInput("hip", "hip", 10, min = min(bodyfat$HIP), max = max(bodyfat$HIP)),
+  numericInput("thigh", "thigh", 10, min = min(bodyfat$THIGH), max = max(bodyfat$THIGH)),
+  numericInput("knee", "knee", 10, min = min(bodyfat$KNEE), max = max(bodyfat$KNEE)),
+  numericInput("ankle", "ankle", 10, min = min(bodyfat$ANKLE), max = max(bodyfat$ANKLE)),
+  numericInput("biceps", "biceps", 10, min = min(bodyfat$BICEPS), max = max(bodyfat$BICEPS)),
+  
+  textOutput('age_error_message'),
+  textOutput('weight_error_message'),
+  textOutput('height_error_message'),
+  textOutput('neck_error_message'),
+  textOutput('chest_error_message'),
+  textOutput('abdomen_error_message'),
+  textOutput('hip_error_message'),
+  textOutput('thigh_error_message'),
+  textOutput('knee_error_message'),
+  textOutput('ankle_error_message'),
+  textOutput('biceps_error_message')
+)
+
+server <- function(input, output) {
+  
+  # bodyfat_data <- reactive({    
+  #   bodyfat%>%mutate(selected=1 * (input$age %between% AGE))
+  # })
+  
+  #set the necessary input here
+  iv <- InputValidator$new()
+  iv$add_rule("age", sv_required())
+  iv$add_rule("weight", sv_required())
+  iv$add_rule("height", sv_required())
+  #iv$add_rule("email", sv_email())
+  iv$enable()
+  
+
+  #Below are the range of each input and error message
+  output$age_error_message <- reactive({
+    validate(need((input$age >= 10 && input$age <= 90), "wrong input: age should be between 10 and 90"))
+    
+  })
+  output$weight_error_message <- reactive({
+    validate(need((input$weight >= 40000 && input$weight <= 200000), "wrong input: weight should be between 40kg to 100kg"))
+  })
+  
+  output$height_error_message <- reactive({
+    validate(need((input$height > 100 && input$height < 200), "wrong input: height should be between 100cm and 200cm"))
+  })
+  
+  output$neck_error_message <- reactive({
+    validate(need(
+                  (input$neck >= 30 && input$neck <= 60), 
+                  "wrong input: neck circumfences should be between 30 and 60"))
+  })
+  
+  
+  output$chest_error_message <- reactive({
+    validate(need((input$chest > 96 && input$chest < 107), "wrong input: chest circumfences should be between 96cm and 107cm"))
+  })
+
+
+  output$abdomen_error_message <- reactive({
+    validate(need((input$abdomen > 60 && input$abdomen < 160), "wrong input: abdomen circumfences should be between 60cm and 160cm"))
+  })
+
+  output$hip_error_message <- reactive({
+    validate(need((input$hip >= 85 && input$hip < 147.7), "wrong input: hip circumfences should be between 96cm and 107cm"))
+  })
+  
+  output$thigh_error_message <- reactive({
+    validate(need((input$thigh >= 40 && input$thigh < 95), "wrong input: thigh circumfences should be between 40cm and 95cm"))
+  })
+
+  
+  output$ankle_error_message <- reactive({
+    validate(need((input$ankle >= 10 && input$ankle < 45), "wrong input: ankle circumfences should be between 10cm and 45cm"))
+  })
+    
+    
+  output$knee_error_message <- reactive({
+    validate(need((input$knee >= 25 && input$knee < 60), "wrong input: knee circumfences should be between 25cm and 60cm"))
+  })
+
+
+  
+  output$biceps_error_message <- reactive({
+    validate(need((input$biceps >= 15 && input$biceps < 60), "wrong input: biceps circumfences should be between 15cm and 60cm"))
+  })
+
+
+}
+
+shinyApp(ui, server)
+```
+
