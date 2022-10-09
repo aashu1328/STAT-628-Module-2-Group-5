@@ -45,17 +45,17 @@ ui <- fluidPage(
   titlePanel("Body fat prediction"),
   
   #set all input box
-  numericInput("age", "age*:", 0, min = 16, max = 90),
+  numericInput("age", "age*:", NULL, min = 16, max = 90),
   textOutput('age_error_message'),
   tags$style(type="text/css", "age {color: red}"),
   
-  numericInput("weight", "weight", 0, min = min(bodyfat$WEIGHT), max = max(bodyfat$WEIGHT)),
+  numericInput("weight", "weight", NULL, min = min(bodyfat$WEIGHT), max = max(bodyfat$WEIGHT)),
   textOutput('weight_error_message'),
   tags$style(type="text/css", "weight {color: red}"),
   
-  # numericInput("height", "height", 0, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
-  # textOutput('height_error_message'),
-  # tags$style(type="text/css", "height {color: red}"),
+  numericInput("height", "height*", NULL, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
+  textOutput('height_error_message'),
+  tags$style(type="text/css", "height {color: red}"),
   
   # numericInput("neck", "neck", 0, min = min(bodyfat$NECK), max = max(bodyfat$NECK)),
   # textOutput('neck_error_message'),
@@ -75,16 +75,12 @@ ui <- fluidPage(
   # textOutput('biceps_error_message'),
   # 
   
-  #actionButton("button", "See your body fat")
+  actionButton("button", "View your result"),
   textOutput('final_prediction'),
   dataTableOutput('table')
 )
 
 server <- function(input, output) {
-  
-  # bodyfat_data <- reactive({    
-  #   bodyfat%>%mutate(selected=1 * (input$age %between% AGE))
-  # })
   
   #set the necessary input here
   iv <- InputValidator$new()
@@ -103,6 +99,10 @@ server <- function(input, output) {
     validate(need((input$weight >= 40 && input$weight <= 200), "wrong input: weight should be between 40kg to 200kg"))
   })
   
+  output$height_error_message <- reactive({
+    validate(need((input$height > 100 && input$height < 200), "wrong input: height should be between 100cm and 200cm"))
+  })
+
   
   #import df
   bodyfat_data <- reactive({
@@ -111,60 +111,68 @@ server <- function(input, output) {
   
   #Prediction output
   output$final_prediction <- renderText({
+    input$button
+    req(input$button)
     
     test_df = data.frame()
     test_df[1,] = c(1)
-    test_df$HEIGHT = c(180)
-    
+
     model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-    
+
     if (isTruthy(input$age)){
       model_formula = paste(model_formula,'AGE',sep = '+')
       test_df$AGE = c(input$age)
     }
-    
+
     if (isTruthy(input$weight)){
       model_formula = paste(model_formula,'WEIGHT',sep = '+')
       test_df$WEIGHT = c(input$weight)
     }
-    
+
+    if (isTruthy(input$height)){
+      model_formula = paste(model_formula,'HEIGHT',sep = '+')
+      test_df$HEIGHT = c(input$height)
+    }
+
+
     model <- lm(model_formula, data = bodyfat_data())
-    paste0('\n','You body fat is ', predict(model, newdata = test_df),'%')
+    isolate(paste0('\n','You body fat is ', predict(model, newdata = test_df),'%'))
   })
-  
-  
-  
-  
-  # output$table <- renderDataTable({
-  #   test_df = data.frame()
-  #   test_df[1,] = c(1)
-  #   test_df$HEIGHT = c(180)
+
+
+  #Botton setting
+  # observeEvent(input$button, {
+  #     output$show_prediction <- renderText({
   #   
-  # 
-  #     #If there is input, then add this input to the model formula
-    # feature_list = c("age", "weight","height", "adiposity" ,"neck", "chest","abdomen", "hip","thigh","knee","ankle","biceps" ,"forearm", "wrist")
-  #   
-  #   #model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-  #   
-  #   # for (name in feature_list){
-  #   #   if (isTruthy(input$name)){
-  #   #     #没问题
-  #   #     #model_formula = paste(model_formula,toupper(input$namename),sep = '+')
-  #   #     #没问题
-  #   #     # feature_name = toupper(name)
-  #   #     # test_df[1,feature_name] = c(input$name)
-  #   #     
-  #   #     print(input$name)
-  #   #   }
-  #   # }
-  #   #print(test_df)
+  #       test_df = data.frame()
+  #       test_df[1,] = c(1)
+  #       
+  #       model_formula = paste('BODYFAT','HEIGHT', sep = '~')
+  #       
+  #       if (isTruthy(input$age)){
+  #         model_formula = paste(model_formula,'AGE',sep = '+')
+  #         test_df$AGE = c(input$age)
+  #       }
+  #       
+  #       if (isTruthy(input$weight)){
+  #         model_formula = paste(model_formula,'WEIGHT',sep = '+')
+  #         test_df$WEIGHT = c(input$weight)
+  #       }
+  #       
+  #       if (isTruthy(input$height)){
+  #         model_formula = paste(model_formula,'HEIGHT',sep = '+')
+  #         test_df$HEIGHT = c(input$height)
+  #       }
+  #       
+  #       
+  #       model <- lm(model_formula, data = bodyfat_data())
+  #       paste0('\n','You body fat is ', predict(model, newdata = test_df),'%')
+  #     })
   # })
-  
-  
-  # output$height_error_message <- reactive({
-  #   validate(need((input$height > 100 && input$height < 200), "wrong input: height should be between 100cm and 200cm"))
-  # })
-  # 
+
+
+
+
   
   # output$neck_error_message <- reactive({
   #   validate(need((input$neck >= 30 && input$neck <= 60),"wrong input: neck circumfences should be between 30 and 60"))
@@ -206,15 +214,34 @@ server <- function(input, output) {
   # 
 
   
-    
-  # #Botton setting
-  # observeEvent(input$button, {
-  #   session$sendCustomMessage(type = 'testmessage',
-  #     message = 'Thank you for clicking')
-  # })
-  # 
-  # 
 
+  ###############################################################################################
+
+  # Will be tested later
+    # output$table <- renderDataTable({
+  #   test_df = data.frame()
+  #   test_df[1,] = c(1)
+  #   test_df$HEIGHT = c(180)
+  #   
+  # 
+  #     #If there is input, then add this input to the model formula
+    # feature_list = c("age", "weight","height", "adiposity" ,"neck", "chest","abdomen", "hip","thigh","knee","ankle","biceps" ,"forearm", "wrist")
+  #   
+  #   #model_formula = paste('BODYFAT','HEIGHT', sep = '~')
+  #   
+  #   # for (name in feature_list){
+  #   #   if (isTruthy(input$name)){
+  #   #     #没问题
+  #   #     #model_formula = paste(model_formula,toupper(input$namename),sep = '+')
+  #   #     #没问题
+  #   #     # feature_name = toupper(name)
+  #   #     # test_df[1,feature_name] = c(input$name)
+  #   #     
+  #   #     print(input$name)
+  #   #   }
+  #   # }
+  #   #print(test_df)
+  # })
 
 }
 
