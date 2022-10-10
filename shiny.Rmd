@@ -38,7 +38,8 @@ predict(model, newdata = test_df)
 ```{r}
 library(shiny)
 library(shinyvalidate)
-bodyfat <- read.csv('bodyfat.csv')
+library(shinyjs)
+bodyfat <- read.csv('BodyFat_Clean.csv')
 
 ui <- fluidPage(
   #set title
@@ -57,30 +58,23 @@ ui <- fluidPage(
   textOutput('height_error_message'),
   tags$style(type="text/css", "height {color: red}"),
   
-  # numericInput("neck", "neck", 0, min = min(bodyfat$NECK), max = max(bodyfat$NECK)),
-  # textOutput('neck_error_message'),
-  # numericInput("chest", "chest", 0, min = min(bodyfat$CHEST), max = max(bodyfat$CHEST)),
-  # textOutput('chest_error_message'),
-  # numericInput("abdomen", "abdomen", 0, min = min(bodyfat$ABDOMEN), max = max(bodyfat$ABDOMEN)),
-  # textOutput('abdomen_error_message'),
-  # numericInput("hip", "hip", 0, min = min(bodyfat$HIP), max = max(bodyfat$HIP)),
-  # textOutput('hip_error_message'),
-  # numericInput("thigh", "thigh", 0, min = min(bodyfat$THIGH), max = max(bodyfat$THIGH)),
-  # textOutput('thigh_error_message'),
-  # numericInput("knee", "knee", 0, min = min(bodyfat$KNEE), max = max(bodyfat$KNEE)),
-  # textOutput('knee_error_message'),
-  # numericInput("ankle", "ankle", 0, min = min(bodyfat$ANKLE), max = max(bodyfat$ANKLE)),
-  # textOutput('ankle_error_message'),
-  # numericInput("biceps", "biceps", 0, min = min(bodyfat$BICEPS), max = max(bodyfat$BICEPS)),
-  # textOutput('biceps_error_message'),
-  # 
-  
+
   actionButton("button", "View your result"),
+  # useShinyjs(),
+  # radioButtons('refresh','refresh result'),
+
+
   textOutput('final_prediction'),
-  dataTableOutput('table')
 )
 
 server <- function(input, output) {
+  
+  #import df
+  bodyfat_data <- reactive({
+    bodyfat
+  })
+  
+  
   
   #set the necessary input here
   iv <- InputValidator$new()
@@ -88,6 +82,12 @@ server <- function(input, output) {
   iv$add_rule("weight", sv_required())
   iv$add_rule("height", sv_required())
   iv$enable()
+  
+  #尝试refresh按键
+  # observeEvent(input$refresh,{
+  #   hide('final_prediction')
+  # })
+  
   
 
   #Below are the range of each input and error message
@@ -104,16 +104,41 @@ server <- function(input, output) {
   })
 
   
-  #import df
-  bodyfat_data <- reactive({
-    bodyfat
+  
+  #Button setup
+  observeEvent(input$button,{
+    if( is.null(input$age) | is.null(input$weight) | is.null(input$heigh)){
+      showModal(modalDialog(title = 'Warning!!!','Please fiil out all the required fields!!!'))
+      hide('final_prediction')
+    }
+    else if ( !is.null(input$age) & !is.null(input$weight) & !is.null(input$heigh)){
+      show('final_prediction')
+    }
+
   })
   
-  #Prediction output
-  output$final_prediction <- renderText({
+  #prediction output
+  # observeEvent(input$button,{
+  #   if (input$button){
+  #     if( is.null(input$age) | is.null(input$weight) | is.null(input$heigh)){
+  #       showModal(modalDialog(title = 'Warning!!!','Please fiil out all the required fields!!!'))
+  #       toggle('final_prediction')
+  #     }
+  #     else if ( !is.null(input$age) & !is.null(input$weight) & !is.null(input$heigh)){
+  #       show('final_prediction')
+  #     }
+  #   }
+  # 
+  # })
+  
+  
+
+  
+  #Get prediction from the model
+  output$final_prediction <-renderText({
     input$button
-    req(input$button)
-    
+    req(input$button,input$age,input$weight,input$heigh)
+
     test_df = data.frame()
     test_df[1,] = c(1)
 
@@ -139,132 +164,11 @@ server <- function(input, output) {
     isolate(paste0('\n','You body fat is ', predict(model, newdata = test_df),'%'))
   })
 
-
-  #Botton setting
-  # observeEvent(input$button, {
-  #     output$show_prediction <- renderText({
-  #   
-  #       test_df = data.frame()
-  #       test_df[1,] = c(1)
-  #       
-  #       model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-  #       
-  #       if (isTruthy(input$age)){
-  #         model_formula = paste(model_formula,'AGE',sep = '+')
-  #         test_df$AGE = c(input$age)
-  #       }
-  #       
-  #       if (isTruthy(input$weight)){
-  #         model_formula = paste(model_formula,'WEIGHT',sep = '+')
-  #         test_df$WEIGHT = c(input$weight)
-  #       }
-  #       
-  #       if (isTruthy(input$height)){
-  #         model_formula = paste(model_formula,'HEIGHT',sep = '+')
-  #         test_df$HEIGHT = c(input$height)
-  #       }
-  #       
-  #       
-  #       model <- lm(model_formula, data = bodyfat_data())
-  #       paste0('\n','You body fat is ', predict(model, newdata = test_df),'%')
-  #     })
-  # })
-
-
-
-
   
-  # output$neck_error_message <- reactive({
-  #   validate(need((input$neck >= 30 && input$neck <= 60),"wrong input: neck circumfences should be between 30 and 60"))
-  # })
-  # 
-  # 
-  # output$chest_error_message <- reactive({
-  #   validate(need((input$chest > 96 && input$chest < 107), "wrong input: chest circumfences should be between 96cm and 107cm"))
-  # })
-  # 
-  # 
-  # output$abdomen_error_message <- reactive({
-  #   validate(need((input$abdomen > 60 && input$abdomen < 160), "wrong input: abdomen circumfences should be between 60cm and 160cm"))
-  # })
-  # 
-  # output$hip_error_message <- reactive({
-  #   validate(need((input$hip >= 85 && input$hip < 147.7), "wrong input: hip circumfences should be between 96cm and 107cm"))
-  # })
-  # 
-  # output$thigh_error_message <- reactive({
-  #   validate(need((input$thigh >= 40 && input$thigh < 95), "wrong input: thigh circumfences should be between 40cm and 95cm"))
-  # })
-  # 
-  # 
-  # output$ankle_error_message <- reactive({
-  #   validate(need((input$ankle >= 10 && input$ankle < 45), "wrong input: ankle circumfences should be between 10cm and 45cm"))
-  # })
-  #   
-  #   
-  # output$knee_error_message <- reactive({
-  #   validate(need((input$knee >= 25 && input$knee < 60), "wrong input: knee circumfences should be between 25cm and 60cm"))
-  # })
-  # 
-  # 
-  # 
-  # output$biceps_error_message <- reactive({
-  #   validate(need((input$biceps >= 15 && input$biceps < 60), "wrong input: biceps circumfences should be between 15cm and 60cm"))
-  # })
-  # 
-
-  
-
-  ###############################################################################################
-
-  # Will be tested later
-    # output$table <- renderDataTable({
-  #   test_df = data.frame()
-  #   test_df[1,] = c(1)
-  #   test_df$HEIGHT = c(180)
-  #   
-  # 
-  #     #If there is input, then add this input to the model formula
-    # feature_list = c("age", "weight","height", "adiposity" ,"neck", "chest","abdomen", "hip","thigh","knee","ankle","biceps" ,"forearm", "wrist")
-  #   
-  #   #model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-  #   
-  #   # for (name in feature_list){
-  #   #   if (isTruthy(input$name)){
-  #   #     #没问题
-  #   #     #model_formula = paste(model_formula,toupper(input$namename),sep = '+')
-  #   #     #没问题
-  #   #     # feature_name = toupper(name)
-  #   #     # test_df[1,feature_name] = c(input$name)
-  #   #     
-  #   #     print(input$name)
-  #   #   }
-  #   # }
-  #   #print(test_df)
-  # })
 
 }
 
 shinyApp(ui, server)
-```
-
-```{r}
-test_df = data.frame()
-test_df[1,] = c(1)
-test_df$HEIGHT = c(180)
-
-feature_list = c("age", "weight")
-#model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-
-for (name in feature_list){
-  # if (isTruthy(input$name)){
-  #   #model_formula = paste(model_formula,toupper(input$namename),sep = '+')
-  #   test_df$name = c(input$name)
-  # }
-  feature_name = toupper(name)
-  test_df[1,feature_name] = c(200)
-}
-print(test_df)
 ```
 
 
