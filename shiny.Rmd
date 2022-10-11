@@ -9,63 +9,65 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
-library(shiny)
-library(shinyvalidate)
-library(tidyverse)
-bodyfat <- read.csv('bodyfat.csv')
-bodyfat_simple <- bodyfat %>%  select(HEIGHT, WEIGHT, BODYFAT)
 
-
-model <- lm(paste('BODYFAT','HEIGHT+WEIGHT', sep = '~'),data = bodyfat_simple)
-summary(model)
-
-  # ggplot(bodyfat_simple, aes(WEIGHT,HEIGHT))+
-  #   geom_point()+
-  #   stat_smooth(method = lm)
-```
-
-
-```{r}
-test_df = data.frame()
-test_df[1,] = c(1)
-test_df$HEIGHT = c(100)
-test_df$WEIGHT = c(100)
-predict(model, newdata = test_df)
-```
 
 
 ```{r}
 library(shiny)
 library(shinyvalidate)
 library(shinyjs)
+library(tidyverse)
 bodyfat <- read.csv('BodyFat_Clean.csv')
+
+
 
 ui <- fluidPage(
   #set title
   titlePanel("Body fat prediction"),
   
-  #set all input box
-  numericInput("age", "age*:", NULL, min = 18, max = 90),
-  textOutput('age_error_message'),
-  #tags$style(type="text/css", "age {color: red}"),
+  tags$head(
+    tags$style(HTML(" .shiny-output-error-validation {color: #ff0000;font-weight: bold;}"))),
   
-  numericInput("weight", "weight", NULL, min = min(bodyfat$WEIGHT), max = max(bodyfat$WEIGHT)),
-  textOutput('weight_error_message'),
-  #tags$style(type="text/css", "weight {color: red}"),
   
-  numericInput("height", "height*", NULL, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
-  textOutput('height_error_message'),
-  #tags$style(type="text/css", "height {color: red}"),
-  
+  fluidRow(
+    column(4, 
+             numericInput("age", "age*:", NULL, min = 18, max = 90),
+              textOutput('age_error_message',),
+              tags$head(tags$style("#age_error_message{color: red;
+                                 font-size: 12px;
+                                 font-style: italic;
+                                 }"))
+           ),
+    
+    
+    column(4,
+             numericInput("weight", "weight", NULL, min = min(bodyfat$WEIGHT), max = max(bodyfat$WEIGHT)),
+          textOutput('weight_error_message'),
+          tags$head(tags$style("#weight_error_message{color: red;
+                                 font-size: 12px;
+                                 font-style: italic;
+                                 }"))
+           ),
+    
+    column(4,
+            numericInput("height", "height*", NULL, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
+            textOutput('height_error_message'),
+            tags$head(tags$style("#height_error_message{color: red;
+                                 font-size: 12px;
+                                 font-style: italic;
+                                 }"))
+           )
+  ),
 
   actionButton("button", "View your result"),
-  # useShinyjs(),
-  # radioButtons('refresh','refresh result'),
-
-  
-  textOutput('final_prediction')
+  textOutput('final_prediction'),
+  tags$head(tags$style("#final_prediction{color: green;
+                     font-size: 20px;
+                     font-style: bold;
+                     }"))
 )
+
+
 
 server <- function(input, output) {
 
@@ -78,28 +80,25 @@ server <- function(input, output) {
   #set the necessary input here
   iv <- InputValidator$new()
   iv$add_rule("age", sv_required())
-  iv$add_rule("weight", sv_required())
   iv$add_rule("height", sv_required())
   iv$enable()
-  
-  #????refresh????
-  # observeEvent(input$refresh,{
-  #   hide('final_prediction')
-  # })
   
   
 
   #Below are the range of each input and error message
   output$age_error_message <- reactive({
-    validate(need((input$age >= 10 && input$age <= 90), "wrong input: age should be between 10 and 90"))
+    validate(need((input$age >= 18 && input$age <= 90),
+                  "wrong input: age should be between 18 and 90"))
     
   })
   output$weight_error_message <- reactive({
-    validate(need((input$weight >= 40 && input$weight <= 200), "wrong input: weight should be between 40kg to 200kg"))
+    validate(need((input$weight >= 40 && input$weight <= 200), 
+                  "wrong input: weight should be between 40kg to 200kg"))
   })
   
   output$height_error_message <- reactive({
-    validate(need((input$height > 100 && input$height < 200), "wrong input: height should be between 100cm and 200cm"))
+    validate(need((input$height > 140 && input$height < 220), 
+                  "wrong input: height should be between 140cm and 220cm"))
   })
 
   
@@ -107,33 +106,56 @@ server <- function(input, output) {
   #Button setup
   observeEvent(input$button,{
     if ( (input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == TRUE){
-      #show('final_prediction')
-      output$final_prediction <-renderText({
-        input$button
-        req(input$button)
-
-        test_df = data.frame()
-        test_df[1,] = c(1)
-
-        model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-
-        if (isTruthy(input$age)){
-          model_formula = paste(model_formula,'AGE',sep = '+')
-          test_df$AGE = c(input$age)
-        }
-
-        if (isTruthy(input$weight)){
-          model_formula = paste(model_formula,'WEIGHT',sep = '+')
-          test_df$WEIGHT = c(input$weight)
-        }
+      if ( (input$age <= 90 & input$age >= 18) & 
+           (input$weight <= 200 & input$weight >= 40) &
+           (input$height <= 220 & input$height >= 140)){
+              output$final_prediction <-renderText({
+                input$button
+                req(input$button)
         
-        if (isTruthy(input$height)){
-          test_df$HEIGHT = c(input$height)
-        }
+                test_df = data.frame()
+                test_df[1,] = c(1)
+        
+                model_formula = paste('BODYFAT','HEIGHT', sep = '~')
+        
+                if (isTruthy(input$age)){
+                  model_formula = paste(model_formula,'AGE',sep = '+')
+                  test_df$AGE = c(input$age)
+                }
+        
+                if (isTruthy(input$weight)){
+                  model_formula = paste(model_formula,'WEIGHT',sep = '+')
+                  test_df$WEIGHT = c(input$weight)
+                }
+                
+                if (isTruthy(input$height)){
+                  test_df$HEIGHT = c(input$height)
+                }
+        
+                model <- lm(model_formula, data = bodyfat_data())
+                model_prediction <- predict(model, newdata = test_df)
+                isolate(paste0('\n','You body fat is ', model_prediction ,'%'))
+                
+                if( model_prediction < 13 & model_prediction >6){
+                  print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ',
+                  'You have an athlete bodyfat'))
+                }
+                else if (model_prediction < 17 & model_prediction >14){
+                  print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ',
+                             'You look fit'  ))
+                }
+                else if (model_prediction < 24 & model_prediction >18){
+                  print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ',
+                            'You bodyfat level is normal'   ))
+        
+                }
+                else if (model_prediction>25){
+                  print(paste0('\n','You body fat is ', model_prediction ,'%',' and ',
+                         'You might need to hit the gym'      ))
+                }
+              })
 
-        model <- lm(model_formula, data = bodyfat_data())
-        isolate(paste0('\n','You body fat is ', predict(model, newdata = test_df),'%'))
-      })
+        }
     }
     else if( (input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == FALSE){
       showModal(modalDialog(title = 'Warning!!!','Please fiil out all the required fields!!!'))
@@ -141,39 +163,6 @@ server <- function(input, output) {
     }
 
   })
-  
-  
-  
-  #Get prediction from the model
-  # output$final_prediction <-renderText({
-  #   input$button
-  #   req(input$button,input$age,input$weight,input$heigh)
-  # 
-  #   test_df = data.frame()
-  #   test_df[1,] = c(1)
-  # 
-  #   model_formula = paste('BODYFAT','HEIGHT', sep = '~')
-  # 
-  #   if (isTruthy(input$age)){
-  #     model_formula = paste(model_formula,'AGE',sep = '+')
-  #     test_df$AGE = c(input$age)
-  #   }
-  # 
-  #   if (isTruthy(input$weight)){
-  #     model_formula = paste(model_formula,'WEIGHT',sep = '+')
-  #     test_df$WEIGHT = c(input$weight)
-  #   }
-  # 
-  #   # if (isTruthy(input$height)){
-  #   #   model_formula = paste(model_formula,'HEIGHT',sep = '+')
-  #   #   test_df$HEIGHT = c(input$height)
-  #   # }
-  # 
-  # 
-  #   model <- lm(model_formula, data = bodyfat_data())
-  #   isolate(paste0('\n','You body fat is ', predict(model, newdata = test_df),'%'))
-  # })
-
   
 
 }
