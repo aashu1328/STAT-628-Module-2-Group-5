@@ -54,7 +54,6 @@ ui <- fluidPage(
     column(6, plotOutput('result_bar'))
   ),
   textOutput('check_drop')
-  
 
 )
 
@@ -63,14 +62,6 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
-  # #check dropdown input
-  # output$check_drop <- reactive({
-  #   if (input$dropdown == 'Logical'){
-  #     return('Logical')
-  #   }else{return('Accurate')}
-  # })
-  
   
   #import df
   bodyfat_data <- reactive({
@@ -129,10 +120,15 @@ server <- function(input, output) {
   
   #Button setup
   observeEvent(input$button,{
-    if ( (input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == TRUE){
-      if ( (input$age <= 90 & input$age >= 18) & 
+    if ( ( (input$dropdown == 'Logical') & ((input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == TRUE)) == TRUE |
+         ((input$dropdown == 'Accurate') & (input_provided(input$abdomen) == TRUE)) == TRUE)
+      {
+      if ( ((input$age <= 90 & input$age >= 18) & 
            (input$weight <= 200 & input$weight >= 40) &
-           (input$height <= 220 & input$height >= 140)){
+           (input$height <= 220 & input$height >= 140)) |
+           (input$abdomen <= 110 & input$abdomen >= 80)
+          )
+        {
               output$final_prediction <-renderText({
                 input$button
                 req(input$button)
@@ -141,7 +137,7 @@ server <- function(input, output) {
                 test_df = data.frame()
                 test_df[1,] = c(1)
                 
-                if('dropdown_val' == 'Logical'){
+                if(input$dropdown == 'Logical'){
                   model_formula = paste('BODYFAT','HEIGHT', sep = '~')
                   if (isTruthy(input$age)){
                     model_formula = paste(model_formula,'AGE',sep = '+')
@@ -159,6 +155,11 @@ server <- function(input, output) {
                 }
                 else{
                   model_formula = paste('BODYFAT','ABDOMEN', sep = '~')
+                                    
+                  if (isTruthy(input$abdomen)){
+                    test_df$ABDOMEN = c(input$abdomen)
+                  }
+                  
                   if (isTruthy(input$age)){
                     model_formula = paste(model_formula,'AGE',sep = '+')
                     test_df$AGE = c(input$age)
@@ -197,7 +198,9 @@ server <- function(input, output) {
               })
         }
     }
-    else if( (input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == FALSE){
+    else if( ((input$dropdown == 'Logical') & ((input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == FALSE)) == FALSE |
+             ((input$dropdown == 'Accurate') & (input_provided(input$abdomen) == FALSE)) == FALSE
+             ){
       showModal(modalDialog(title = 'Warning!!!','Please fiil out all the required fields!!!'))
       hide('final_prediction')
     }
