@@ -1,13 +1,9 @@
-
-
-
-
-```{r}
 library(shiny)
 library(shinyvalidate)
 library(shinyjs)
 library(tidyverse)
 library(WVPlots)
+library(rsconnect)
 bodyfat <- read.csv('BodyFat_Clean.csv')
 
 
@@ -36,7 +32,7 @@ ui <- fluidPage(
       tags$head(tags$style("#weight_error_message{color: red;font-size: 12px;font-style: italic;}")),
 
 
-      numericInput("height", "height", NULL, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
+      numericInput("height", "height*", NULL, min = min(bodyfat$HEIGHT), max = max(bodyfat$HEIGHT)),
       textOutput('height_error_message'),
       tags$head(tags$style("#height_error_message{color: red;font-size: 12px; font-style: italic;}")),
       
@@ -83,6 +79,7 @@ server <- function(input, output) {
   
   iv_acc <- InputValidator$new()
   iv_acc$condition(~isTRUE(input$dropdown != 'Logical'))
+  iv_acc$add_rule('height', sv_required())
   iv_acc$add_rule('abdomen', sv_required())
   iv_acc$enable()
   
@@ -160,9 +157,9 @@ server <- function(input, output) {
                     test_df$ABDOMEN = c(input$abdomen)
                   }
                   
-                  if (isTruthy(input$age)){
-                    model_formula = paste(model_formula,'AGE',sep = '+')
-                    test_df$AGE = c(input$age)
+                  if (isTruthy(input$height)){
+                    model_formula = paste(model_formula,'HEIGHT',sep = '+')
+                    test_df$HEIGHT = c(input$height)
                   }
                 }
         
@@ -180,26 +177,26 @@ server <- function(input, output) {
                   }else{
                     barplot(test_df$body_fat,ylim=c(0,60),ylab = 'Body fat level', col = 'red')
                   }
-                })
+                }, height = 250, width = 250)
                 
                 
-                if( model_prediction < 13 & model_prediction >6){
+                if( model_prediction < 14 & model_prediction >=6){
                   print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ','You have an athlete bodyfat'))
                 }
-                else if (model_prediction < 17 & model_prediction >14){
+                else if (model_prediction < 18 & model_prediction >=14){
                   print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ','You look fit'))
                 }
-                else if (model_prediction < 24 & model_prediction >18){
+                else if (model_prediction < 24 & model_prediction >=18){
                   print(paste0('\n','You body fat is ', model_prediction ,'%', ' and ','You bodyfat level is normal'))
                 }
-                else if (model_prediction>25){
+                else if (model_prediction >= 25){
                   print(paste0('\n','You body fat is ', model_prediction ,'%',' and ','You might need to hit the gym'))
                 }
               })
         }
     }
     else if( ((input$dropdown == 'Logical') & ((input_provided(input$age) & input_provided(input$weight) & input_provided(input$height)) == FALSE)) == FALSE |
-             ((input$dropdown == 'Accurate') & (input_provided(input$abdomen) == FALSE)) == FALSE
+             ((input$dropdown == 'Accurate') & (input_provided(input$abdomen & input_provided(input$height)) == FALSE)) == FALSE
              ){
       showModal(modalDialog(title = 'Warning!!!','Please fiil out all the required fields!!!'))
       hide('final_prediction')
@@ -208,4 +205,3 @@ server <- function(input, output) {
   
 }
 shinyApp(ui, server)
-```
