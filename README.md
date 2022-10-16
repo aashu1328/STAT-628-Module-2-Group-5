@@ -8,6 +8,7 @@ Inside the Final Work folder:
 The cleaned data is found under the name of "BodyFat_Clean". It has 249 rows and 17 features.
 The code for the project is found under the name " Final Code".
 There are other model diagnosis and correlation images are present as well.
+The shiny app code is with the file name "shiny.R"
 
 
 The final model that we came up with was : Body Fat% = 0.78 + 0.60*Abdomen(cm)-0.21*Height(cm)
