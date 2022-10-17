@@ -18,4 +18,4 @@ The final model that we came up with is : Body Fat% = 0.78 + 0.60 * Abdomen(cm) 
 [Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/final_shiny/?_ga=2.131791495.945106650.1666039228-37517346.1666039228)
 
 
-![](./Image/shiny.png)
+![](./Image/shiny1.png)
