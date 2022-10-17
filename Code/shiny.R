@@ -44,7 +44,7 @@ ui <- fluidPage(
   fluidRow(
     column(6,
            wellPanel(
-             titlePanel(h4('Your body fat prediction result')),
+             titlePanel(h4('View your body fat result here')),
              textOutput('final_prediction'),
              tags$head(tags$style("#final_prediction{color: green;font-size: 20px;font-style: bold;}")),
              plotOutput('result_bar')
@@ -52,6 +52,11 @@ ui <- fluidPage(
   ),
   column(6,img(src = 'images.png', align = "left",height='250px',width='500px'))
 
+  ),
+  
+  fluidRow(
+    column(6, textOutput('')),
+    column(6,textOutput('contact_info'))
   )
 )  
 
@@ -60,6 +65,12 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
+  #contact info
+  output$contact_info <- reactive({
+    print('If you have any concer or question about our app, please email shuang347@wisc.edu')
+  })
+  
+  #
   output$height_in_cm <- reactive({
     feet_cm <- input$convert_feet * 30.48
     inch_cm <- input$convert_inch * 2.54
