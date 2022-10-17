@@ -4,7 +4,8 @@ This is a project that we are working on to predict the body fat% based on diffe
 
 There are three folders named as "Code", "Data" and "Image". 
 
-The Code folder contains all code for data analysis, visualization and Shiny App. 
+The Code folder contains three R files. 
+"Final Code.R" serves for data analysis and modeling, "model diagnose and visualization.R" serves for model evaluation, and "shiny.R" is our  Shiny App. 
 
 Inside the Data Work folder:
 The raw data is found under the name of "BodyFat". It has 252 rows and 17 features.
