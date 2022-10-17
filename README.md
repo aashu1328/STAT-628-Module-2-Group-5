@@ -11,6 +11,6 @@ Inside the Data Work folder:
 The raw data is found under the name of "BodyFat". It has 252 rows and 17 features.
 The cleaned data is found under the name of "BodyFat_Clean". It has 249 rows and 17 features.
 
-The Code folder contains all Images in the Code.
+The Image folder contains all Images in the Code.
 
-The final model that we came up with was : Body Fat% = 0.78 + 0.60*Abdomen(cm)-0.21*Height(cm)
+The final model that we came up with is : Body Fat% = 0.78 + 0.60 * Abdomen(cm) - 0.21 * Height(cm)
