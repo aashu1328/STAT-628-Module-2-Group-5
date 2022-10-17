@@ -14,3 +14,8 @@ The cleaned data is found under the name of "BodyFat_Clean". It has 249 rows and
 The Image folder contains all Images in the Code.
 
 The final model that we came up with is : Body Fat% = 0.78 + 0.60 * Abdomen(cm) - 0.21 * Height(cm)
+
+[Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/final_shiny/?_ga=2.131791495.945106650.1666039228-37517346.1666039228)
+
+
+![](./Image/shiny.png)
