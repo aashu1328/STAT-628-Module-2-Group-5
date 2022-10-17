@@ -32,6 +32,7 @@ ui <- fluidPage(
     ),
     
     column(6,  
+           titlePanel(h4('If you have any concern or question about our app, please email shuang347@wisc.edu')),
            wellPanel(
              titlePanel(h4("Convert feet/inch to cm")),
              numericInput('convert_feet', 'convert feet to cm', NULL),
@@ -50,26 +51,24 @@ ui <- fluidPage(
              plotOutput('result_bar')
            )
   ),
-  column(6,img(src = 'images.png', align = "left",height='250px',width='500px'))
+  column(6,img(src = 'images.png', align = "left",height='250px',width='500px')
+         
+         )
 
-  ),
-  
-  fluidRow(
-    column(6, textOutput('')),
-    column(6,textOutput('contact_info'))
   )
-)  
+)
+  
+#   fluidRow(
+#     column(6, textOutput('')),
+#     column(6,textOutput('contact_info'))
+#   )
+# )  
 
 
 
 
 
 server <- function(input, output) {
-  #contact info
-  output$contact_info <- reactive({
-    print('If you have any concer or question about our app, please email shuang347@wisc.edu')
-  })
-  
   #
   output$height_in_cm <- reactive({
     feet_cm <- input$convert_feet * 30.48
